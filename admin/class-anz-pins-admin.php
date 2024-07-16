@@ -53,6 +53,8 @@ class Anz_Pins_Admin
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+
+		add_action('admin_init', array($this, 'settings_init'));
 	}
 
 	/**
@@ -106,7 +108,7 @@ class Anz_Pins_Admin
 		// Add a new top-level menu (settings page)
 		add_submenu_page(
 			'tools.php', // Parent slug
-			'ANZ Pins', // Page title
+			'ANZ Pins Settings', // Page title
 			'ANZ Pins', // Menu title
 			'manage_options', // Capability required to see this menu
 			'anz-pins-settings', // Menu slug
@@ -121,14 +123,68 @@ class Anz_Pins_Admin
 			return;
 		}
 
-		// Display the settings page content
-		echo '<div class="wrap">';
-		echo '<h1>' . esc_html(get_admin_page_title()) . '</h1>';
-		echo '<form action="options.php" method="post">';
-		settings_fields('anz_pins_options');
-		do_settings_sections('anz-pins-settings');
-		submit_button('Save Settings');
-		echo '</form>';
-		echo '</div>';
+?>
+		<div class="wrap">
+			<h1>ANZ Pins Map</h1>
+			<form method="post" action="options.php">
+				<?php
+				settings_fields('anz_pins_options_group');
+				do_settings_sections('anz-pins-settings');
+				submit_button();
+				?>
+			</form>
+		</div>
+<?php
+	}
+
+	public function settings_init()
+	{
+		register_setting('anz_pins_options_group', 'anz_pins_souce_option');
+		register_setting('anz_pins_options_group', 'anz_pins_google_key_option');
+
+		add_settings_section(
+			'base_map_settings_section',
+			'Base Map',
+			array($this, 'base_map_settings_section_callback'),
+			'anz-pins-settings'
+		);
+
+		add_settings_field(
+			'base_map_setting_field',
+			'Source',
+			array($this, 'source_setting_field_callback'),
+			'anz-pins-settings',
+			'base_map_settings_section'
+		);
+
+		add_settings_field(
+			'google_key_setting_field',
+			'Google Map API Key',
+			array($this, 'google_key_setting_field_callback'),
+			'anz-pins-settings',
+			'base_map_settings_section'
+		);
+	}
+
+
+	public function base_map_settings_section_callback()
+	{
+		echo '<p>Source of the Base Map.</p>';
+	}
+
+	public function source_setting_field_callback()
+	{
+		$option = get_option('anz_pins_souce_option');
+
+		$choices = array('openmap' => 'OpenMap', 'google' => 'Google Map');
+		foreach ($choices as $value => $label) {
+			echo '<label><input type="radio" name="anz_pins_souce_option" value="' . esc_attr($value) . '" ' . checked($value, $option, false) . '> ' . esc_html($label) . '</label><br>';
+		}
+	}
+
+	public function google_key_setting_field_callback()
+	{
+		$option = get_option('anz_pins_google_key_option');
+		echo '<input type="text" name="anz_pins_google_key_option" value="' . esc_attr($option) . '">';
 	}
 }
