@@ -214,6 +214,7 @@ class Anz_Pins_Admin
 					<tr>
 						<th>ID</th>
 						<th>Name</th>
+						<th>Shortcode</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
@@ -222,6 +223,13 @@ class Anz_Pins_Admin
 						<tr>
 							<td><?php echo esc_html($id); ?></td>
 							<td><?php echo esc_html($item['name']); ?></td>
+							<td>
+								<input type="text" readonly value="[anz_pins map='<?php echo esc_attr($id); ?>']" class="shortcode-field">
+								<p>
+									<button class="button copy-shortcode" data-shortcode="[anz_pins map='<?php echo esc_attr($id); ?>']">Copy</button>
+								</p>
+
+							</td>
 							<td>
 								<button type="button" class="button edit-item" data-id="<?php echo esc_attr($id); ?>">Edit</button>
 								<button type="button" class="button delete-item" data-id="<?php echo esc_attr($id); ?>">Delete</button>
@@ -235,7 +243,7 @@ class Anz_Pins_Admin
 		$this->add_edit_modal(); // Function to add the modal for editing items
 	}
 
-	function add_edit_modal()
+	public function add_edit_modal()
 	{
 	?>
 		<div id="edit-modal" style="display:none;">
@@ -268,6 +276,11 @@ class Anz_Pins_Admin
 			.modal-content {
 				display: flex;
 				flex-direction: column;
+			}
+
+			.shortcode-field {
+				width: 300px;
+				margin-right: 5px;
 			}
 		</style>
 		<script>
