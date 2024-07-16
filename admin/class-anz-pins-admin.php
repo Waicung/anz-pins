@@ -335,6 +335,17 @@ class Anz_Pins_Admin
 					});
 				});
 
+				// Handle the copy button click
+				$('.copy-shortcode').on('click', function() {
+					var shortcode = $(this).data('shortcode');
+					var $temp = $('<input>');
+					$('body').append($temp);
+					$temp.val(shortcode).select();
+					document.execCommand('copy');
+					$temp.remove();
+					alert('Shortcode copied to clipboard: ' + shortcode);
+				});
+
 				// Close the modal
 				$('#close-modal').on('click', function() {
 					$('#edit-modal').hide();
