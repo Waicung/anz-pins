@@ -107,29 +107,6 @@ class Anz_Pins_Public
 		wp_enqueue_script('leaflet-js', 'https://unpkg.com/leaflet/dist/leaflet.js', array(), null, false);
 	}
 
-	/**
-	 * Register the shortcode for the plugin.
-	 *
-	 * @since    1.0.0
-	 */
-	public function register_shortcode()
-	{
-		add_shortcode('anz_pins', array($this, 'anz_pins_shortcode'));
-	}
-
-	/**
-	 * Callback function for the anz_pins shortcode.
-	 *
-	 * @since    1.0.0
-	 * @param    array    $atts    Shortcode attributes.
-	 * @return   string            Shortcode output.
-	 */
-	public function anz_pins_shortcode($atts)
-	{
-		// Add your shortcode logic here
-		return 'Anz Pins Shortcode Output';
-	}
-
 	public function anz_pins_shortcode_handler($atts = [], $content = null)
 	{
 

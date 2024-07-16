@@ -20,7 +20,8 @@
  * @subpackage Anz_Pins/admin
  * @author     Will <will@willai.com.au>
  */
-class Anz_Pins_Admin {
+class Anz_Pins_Admin
+{
 
 	/**
 	 * The ID of this plugin.
@@ -47,11 +48,11 @@ class Anz_Pins_Admin {
 	 * @param      string    $plugin_name       The name of this plugin.
 	 * @param      string    $version    The version of this plugin.
 	 */
-	public function __construct( $plugin_name, $version ) {
+	public function __construct($plugin_name, $version)
+	{
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
-
 	}
 
 	/**
@@ -59,7 +60,8 @@ class Anz_Pins_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_styles() {
+	public function enqueue_styles()
+	{
 
 		/**
 		 * This function is provided for demonstration purposes only.
@@ -73,8 +75,7 @@ class Anz_Pins_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/anz-pins-admin.css', array(), $this->version, 'all' );
-
+		wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/anz-pins-admin.css', array(), $this->version, 'all');
 	}
 
 	/**
@@ -82,7 +83,8 @@ class Anz_Pins_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_scripts() {
+	public function enqueue_scripts()
+	{
 
 		/**
 		 * This function is provided for demonstration purposes only.
@@ -96,8 +98,37 @@ class Anz_Pins_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/anz-pins-admin.js', array( 'jquery' ), $this->version, false );
-
+		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/anz-pins-admin.js', array('jquery'), $this->version, false);
 	}
 
+	public function add_admin_menu()
+	{
+		// Add a new top-level menu (settings page)
+		add_submenu_page(
+			'tools.php', // Parent slug
+			'ANZ Pins', // Page title
+			'ANZ Pins', // Menu title
+			'manage_options', // Capability required to see this menu
+			'anz-pins-settings', // Menu slug
+			array($this, 'display_settings_page') // Function to display the settings page
+		);
+	}
+
+	public function display_settings_page()
+	{
+		// Check user capabilities
+		if (!current_user_can('manage_options')) {
+			return;
+		}
+
+		// Display the settings page content
+		echo '<div class="wrap">';
+		echo '<h1>' . esc_html(get_admin_page_title()) . '</h1>';
+		echo '<form action="options.php" method="post">';
+		settings_fields('anz_pins_options');
+		do_settings_sections('anz-pins-settings');
+		submit_button('Save Settings');
+		echo '</form>';
+		echo '</div>';
+	}
 }
