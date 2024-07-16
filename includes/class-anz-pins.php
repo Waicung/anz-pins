@@ -199,4 +199,25 @@ class Anz_Pins
 	{
 		return $this->plugin_name;
 	}
+
+	public static function get_icon_url()
+	{
+		// get site icon
+		$site_icon_url = get_site_icon_url();
+		// Check if the site icon URL is set
+		if ($site_icon_url) {
+			// Return the site icon URL
+			return esc_url($site_icon_url);
+		}
+
+		// get DIVI logo
+		$divi_options = get_option('et_divi');
+		// Check if the logo URL is set in the options
+		if (isset($divi_options['divi_logo']) && !empty($divi_options['divi_logo'])) {
+			// Return the logo URL
+			return esc_url($divi_options['divi_logo']);
+		}
+
+		return plugins_url('../public/icons/anzpin.png', __FILE__);
+	}
 }
