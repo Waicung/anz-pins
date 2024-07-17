@@ -1,5 +1,7 @@
 <?php
 
+use Shuchkin\SimpleXLSX;
+
 /**
  * The admin-specific functionality of the plugin.
  *
@@ -249,10 +251,15 @@ class Anz_Pins_Admin
 		<div id="edit-modal" style="display:none;">
 			<div class="modal-content">
 				<form id="edit-item-form">
+					<input type="hidden" name="action" value="save_anz_pins_map">
 					<input type="hidden" name="item_id" id="item_id" value="">
 					<p>
 						<label for="item_name">Name</label>
 						<input type="text" name="item_name" id="item_name" value="">
+					</p>
+					<p>
+						<label for="item_file">Upload Excel File</label>
+						<input type="file" name="item_file" id="item_file">
 					</p>
 					<p>
 						<button type="submit" class="button button-primary">Save</button>
@@ -305,16 +312,18 @@ class Anz_Pins_Admin
 				$('#edit-item-form').on('submit', function(e) {
 					e.preventDefault();
 
-					var itemId = $('#item_id').val();
-					var itemName = $('#item_name').val();
+					var formData = new FormData(this);
 
 					// AJAX request to save the item
-					$.post(ajaxurl, {
-						action: 'save_anz_pins_map',
-						item_id: itemId,
-						item_name: itemName,
-					}, function(response) {
-						location.reload(); // Reload the page to show the updated list
+					$.ajax({
+						url: ajaxurl,
+						type: 'POST',
+						data: formData,
+						processData: false,
+						contentType: false,
+						success: function(response) {
+							location.reload(); // Reload the page to show the updated list
+						}
 					});
 				});
 
@@ -368,6 +377,7 @@ class Anz_Pins_Admin
 
 		// Get the existing items
 		$items = get_option('anz_pins_maps', array());
+		$item_file = $_FILES['item_file'];
 
 		if (empty($item_id)) {
 			// Add a new item
@@ -376,6 +386,27 @@ class Anz_Pins_Admin
 
 		// Update the item
 		$items[$item_id] = array('name' => $item_name);
+
+		// Handle the file upload and parse the Excel file
+		if ($item_file && $item_file['tmp_name']) {
+
+			if ($xlsx = SimpleXLSX::parse($item_file['tmp_name'])) {
+				$country_postcodes = array();
+				$isFirstLine = true;
+				foreach ($xlsx->rows() as $row) {
+					if ($isFirstLine && $row[0] === 'country') {
+						$isFirstLine = false;
+						continue;
+					}
+					$country = sanitize_text_field($row[0]);
+					$postcode = sanitize_text_field($row[1]);
+					$country_postcodes[] = array('country' => $country, 'postcode' => $postcode);
+				}
+				$items[$item_id]['country_postcodes'] = $country_postcodes;
+			} else {
+				wp_die(SimpleXLSX::parseError());
+			}
+		}
 
 		// Save the items
 		update_option('anz_pins_maps', $items);
