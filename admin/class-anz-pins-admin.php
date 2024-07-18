@@ -217,7 +217,7 @@ class Anz_Pins_Admin
 						<th>ID</th>
 						<th>Name</th>
 						<th>Shortcode</th>
-						<th>Pins</th>
+						<th>Postcodes</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
@@ -331,7 +331,6 @@ class Anz_Pins_Admin
 					$('#item_id').val(itemId);
 					$('#item_name').val(itemName);
 					// populate the country_postcodes
-					//console.log($(this).closest('tr').find('input.country_postcodes').val())
 					if ($(this).closest('tr').find('input.country_postcodes').val()!=='') {
 						var country_postcodes = JSON.parse($(this).closest('tr').find('input.country_postcodes').val());
 						var country_postcodes_html = '';
