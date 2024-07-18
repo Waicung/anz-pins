@@ -211,12 +211,13 @@ class Anz_Pins_Admin
 				<button id="add-new-item" class="button" type="button">Add New Map</button>
 			</p>
 
-			<table class="wp-list-table widefat fixed striped">
+			<table class="wp-list-table widefat fixed striped centered">
 				<thead>
 					<tr>
 						<th>ID</th>
 						<th>Name</th>
 						<th>Shortcode</th>
+						<th>Pins</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
@@ -231,6 +232,19 @@ class Anz_Pins_Admin
 									<button class="button copy-shortcode" data-shortcode="[anz_pins map='<?php echo esc_attr($id); ?>']">Copy</button>
 								</p>
 
+							</td>
+							<td>
+								<?php if (isset($item['country_postcodes'])) : ?>
+									<?php
+									$jsonData = json_encode($item['country_postcodes']);
+									$escapedData = htmlspecialchars($jsonData, ENT_QUOTES, 'UTF-8');
+									?>
+									<span class="pin_counter"><?php echo count($item['country_postcodes']); ?></span>
+									<input class="country_postcodes" type="hidden" value="<?php echo $escapedData; ?>" />
+								<?php else : ?>
+									<span class="pin_counter">0</span>
+									<input class="country_postcodes" type="hidden" value="" />
+								<?php endif; ?>
 							</td>
 							<td>
 								<button type="button" class="button edit-item" data-id="<?php echo esc_attr($id); ?>">Edit</button>
@@ -261,6 +275,17 @@ class Anz_Pins_Admin
 						<label for="item_file">Upload Excel File</label>
 						<input type="file" name="item_file" id="item_file">
 					</p>
+					<!-- table view to display country_codes -->
+					<table class="wp-list-table widefat fixed striped">
+						<thead>
+							<tr>
+								<th>Country</th>
+								<th>Postcode</th>
+							</tr>
+						</thead>
+						<tbody id="country-postcodes">
+						</tbody>
+					</table>
 					<p>
 						<button type="submit" class="button button-primary">Save</button>
 						<button type="button" id="close-modal" class="button">Cancel</button>
@@ -286,7 +311,6 @@ class Anz_Pins_Admin
 			}
 
 			.shortcode-field {
-				width: 300px;
 				margin-right: 5px;
 			}
 		</style>
@@ -303,8 +327,24 @@ class Anz_Pins_Admin
 				$('.edit-item').on('click', function() {
 					var itemId = $(this).data('id');
 					var itemName = $(this).closest('tr').find('td:nth-child(2)').text();
+
 					$('#item_id').val(itemId);
 					$('#item_name').val(itemName);
+					// populate the country_postcodes
+					//console.log($(this).closest('tr').find('input.country_postcodes').val())
+					if ($(this).closest('tr').find('input.country_postcodes').val()!=='') {
+						var country_postcodes = JSON.parse($(this).closest('tr').find('input.country_postcodes').val());
+						var country_postcodes_html = '';
+						if (country_postcodes.length > 0) {
+							country_postcodes.forEach(function(country_postcode) {
+								country_postcodes_html += '<tr><td>' + country_postcode.country + '</td><td>' + country_postcode.postcode + '</td></tr>';
+							});
+						}
+						// populate the country_postcodes
+						$('#country-postcodes').html(country_postcodes_html);
+					}else{
+						$('#country-postcodes').html('');
+					}
 					$('#edit-modal').show();
 				});
 
