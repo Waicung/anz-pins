@@ -153,6 +153,7 @@ class Anz_Pins_Admin
 	{
 		register_setting('anz_pins_options_group', 'anz_pins_souce_option');
 		register_setting('anz_pins_options_group', 'anz_pins_google_key_option');
+		register_setting('anz_pins_options_group', 'anz_pins_willai_token_option');
 
 		add_settings_section(
 			'base_map_settings_section',
@@ -176,6 +177,21 @@ class Anz_Pins_Admin
 			'anz-pins-settings',
 			'base_map_settings_section'
 		);
+
+		add_settings_section(
+			'location_service_settings_section',
+			'Location Service',
+			array($this, 'location_service_settings_section_callback'),
+			'anz-pins-settings'
+		);
+
+		add_settings_field(
+			'location_token_setting_field',
+			'WillAI Token',
+			array($this, 'location_token_setting_field_callback'),
+			'anz-pins-settings',
+			'location_service_settings_section'
+		);
 	}
 
 
@@ -198,6 +214,17 @@ class Anz_Pins_Admin
 	{
 		$option = get_option('anz_pins_google_key_option');
 		echo '<input type="text" name="anz_pins_google_key_option" value="' . esc_attr($option) . '">';
+	}
+
+	public function location_service_settings_section_callback()
+	{
+		echo '<p>Location Service Settings.</p>';
+	}
+
+	public function location_token_setting_field_callback()
+	{
+		$option = get_option('anz_pins_willai_token_option');
+		echo '<input type="text" name="anz_pins_willai_token_option" value="' . esc_attr($option) . '">';
 	}
 
 	/* Map editor */
@@ -331,7 +358,7 @@ class Anz_Pins_Admin
 					$('#item_id').val(itemId);
 					$('#item_name').val(itemName);
 					// populate the country_postcodes
-					if ($(this).closest('tr').find('input.country_postcodes').val()!=='') {
+					if ($(this).closest('tr').find('input.country_postcodes').val() !== '') {
 						var country_postcodes = JSON.parse($(this).closest('tr').find('input.country_postcodes').val());
 						var country_postcodes_html = '';
 						if (country_postcodes.length > 0) {
@@ -341,7 +368,7 @@ class Anz_Pins_Admin
 						}
 						// populate the country_postcodes
 						$('#country-postcodes').html(country_postcodes_html);
-					}else{
+					} else {
 						$('#country-postcodes').html('');
 					}
 					$('#edit-modal').show();
