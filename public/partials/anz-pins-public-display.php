@@ -21,7 +21,10 @@
 <?php
 $map_id = $atts['map'];
 // get the pins for the map
-$pins = Anz_Pins::get_pins_by_map($map_id);
+$map = Anz_Pins::get_map_by_id($map_id);
+$pins = $map['country_postcodes'];
+$icon = $map['pin_icon'];
+
 ?>
 
 <script>
@@ -38,7 +41,7 @@ $pins = Anz_Pins::get_pins_by_map($map_id);
         // Define a custom icon
         var customIcon = L.icon({
             // load logo of the site
-            iconUrl: '<?php echo Anz_Pins::get_icon_url(); ?>',
+            iconUrl: '<?php echo $icon??Anz_Pins::get_default_icon_url(); ?>',
             iconSize: [32, 32], // Size of the icon
         });
 

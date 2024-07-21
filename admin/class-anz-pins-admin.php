@@ -106,6 +106,9 @@ class Anz_Pins_Admin
 		 */
 
 		wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/anz-pins-admin.js', array('jquery'), $this->version, false);
+
+
+		wp_enqueue_media();
 	}
 
 	public function add_admin_menu()
@@ -245,6 +248,7 @@ class Anz_Pins_Admin
 						<th>Name</th>
 						<th>Shortcode</th>
 						<th>Postcodes</th>
+						<th>Icon</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
@@ -274,6 +278,10 @@ class Anz_Pins_Admin
 								<?php endif; ?>
 							</td>
 							<td>
+								<?php $customIcon = $item['pin_icon'] ?? Anz_Pins::get_default_icon_url(); ?>
+								<img src="<?php echo esc_url($customIcon); ?>" style="width: 32px; height: 32px;">
+							</td>
+							<td>
 								<button type="button" class="button edit-item" data-id="<?php echo esc_attr($id); ?>">Edit</button>
 								<button type="button" class="button delete-item" data-id="<?php echo esc_attr($id); ?>">Delete</button>
 							</td>
@@ -301,6 +309,12 @@ class Anz_Pins_Admin
 					<p>
 						<label for="item_file">Upload Excel File</label>
 						<input type="file" name="item_file" id="item_file">
+					</p>
+					<!-- a new element for icon selector from media -->
+					<p>
+						<label for="pin_icon">Custom Icon</label>
+						<input type="text" name="pin_icon" id="pin_icon" value="">
+						<button type="button" id="select-pin-icon" class="button">Select Icon</button>
 					</p>
 					<!-- table view to display country_codes -->
 					<table class="wp-list-table widefat fixed striped">
@@ -347,6 +361,57 @@ class Anz_Pins_Admin
 			</style>
 			<script>
 				jQuery(document).ready(function($) {
+					/* icon selector */
+					$('#select-pin-icon').click(function(e) {
+						e.preventDefault();
+
+						var image_frame;
+						if (image_frame) {
+							image_frame.open();
+						}
+						// Define image_frame as wp.media object
+						image_frame = wp.media({
+							title: 'Select Media',
+							multiple: false,
+							library: {
+								type: 'image',
+							}
+						});
+
+						image_frame.on('close', function() {
+							// On close, get selections and save to the hidden input
+							// plus other AJAX stuff to be done
+							var selection = image_frame.state().get('selection');
+							var gallery_ids = new Array();
+							var my_index = 0;
+							selection.each(function(attachment) {
+								gallery_ids[my_index] = attachment['id'];
+								my_index++;
+							});
+							var ids = gallery_ids.join(",");
+							if (ids.length > 0) {
+								var attachment = selection.first().toJSON();
+								$('#pin_icon').val(attachment.url); // Set the value of the input to the image URL
+							}
+						});
+
+						image_frame.on('open', function() {
+							// On open, get the id from the hidden input
+							// and select the appropiate images in the media manager
+							var selection = image_frame.state().get('selection');
+							var ids = $('#pin_icon').val().split(',');
+							ids.forEach(function(id) {
+								var attachment = wp.media.attachment(id);
+								attachment.fetch();
+								selection.add(attachment ? [attachment] : []);
+							});
+
+						});
+
+						image_frame.open();
+					});
+					/* end icon selector */
+
 					// Show the modal for adding a new item
 					$('#add-new-item').on('click', function() {
 						$('#item_id').val('');
@@ -358,9 +423,12 @@ class Anz_Pins_Admin
 					$('.edit-item').on('click', function() {
 						var itemId = $(this).data('id');
 						var itemName = $(this).closest('tr').find('td:nth-child(2)').text();
+						var icon = $(this).closest('tr').find('td:nth-child(5) img').attr('src');
 
 						$('#item_id').val(itemId);
 						$('#item_name').val(itemName);
+						$('#pin_icon').val(icon);
+
 						// populate the country_postcodes
 						if ($(this).closest('tr').find('input.country_postcodes').val() !== '') {
 							var country_postcodes = JSON.parse($(this).closest('tr').find('input.country_postcodes').val());
@@ -444,6 +512,7 @@ class Anz_Pins_Admin
 		// Get the posted data
 		$item_id = sanitize_text_field($_POST['item_id']);
 		$item_name = sanitize_text_field($_POST['item_name']);
+		$custom_icon = sanitize_url($_POST['pin_icon']);
 
 		// Get the existing items
 		$items = get_option('anz_pins_maps', array());
@@ -455,10 +524,11 @@ class Anz_Pins_Admin
 		}
 
 		// Update the item
-		$items[$item_id] = array('name' => $item_name);
+		$items[$item_id]['name'] = $item_name;
+		$items[$item_id]['pin_icon'] = $custom_icon;
 
 		// Handle the file upload and parse the Excel file
-		if ($item_file && $item_file['tmp_name']) {
+		if ($item_file && !empty($item_file['tmp_name'])) {
 
 			if ($xlsx = SimpleXLSX::parse($item_file['tmp_name'])) {
 				$country_postcodes = array();
@@ -485,6 +555,8 @@ class Anz_Pins_Admin
 				wp_die(SimpleXLSX::parseError());
 			}
 		}
+
+		// handle icon update
 
 		// Save the items
 		update_option('anz_pins_maps', $items);
