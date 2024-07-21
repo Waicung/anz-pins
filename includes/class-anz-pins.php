@@ -179,7 +179,7 @@ class Anz_Pins
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
 		$this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
 
-		add_shortcode('anz_pins_shortcode', array($plugin_public, 'anz_pins_shortcode_handler'));
+		add_shortcode('anz_pins', array($plugin_public, 'anz_pins_shortcode_handler'));
 	}
 
 	/**
@@ -223,5 +223,12 @@ class Anz_Pins
 		}
 
 		return plugins_url('../public/icons/anzpin.png', __FILE__);
+	}
+
+	public static function get_pins_by_map($map_id){
+		$maps = get_option('anz_pins_maps', array());
+		$map = $maps[$map_id];
+		$pins = $map['country_postcodes'];
+		return $pins;
 	}
 }

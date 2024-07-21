@@ -170,13 +170,13 @@ class Anz_Pins_Admin
 			'base_map_settings_section'
 		);
 
-		add_settings_field(
+		/* add_settings_field(
 			'google_key_setting_field',
 			'Google Map API Key',
 			array($this, 'google_key_setting_field_callback'),
 			'anz-pins-settings',
 			'base_map_settings_section'
-		);
+		); */
 
 		add_settings_section(
 			'location_service_settings_section',
@@ -204,7 +204,7 @@ class Anz_Pins_Admin
 	{
 		$option = get_option('anz_pins_souce_option');
 
-		$choices = array('openstreet' => ' OpenStreet Map', 'google' => 'Google Map');
+		$choices = array('openstreet' => ' OpenStreet Map'/* , 'google' => 'Google Map' */);
 		foreach ($choices as $value => $label) {
 			echo '<label><input type="radio" name="anz_pins_souce_option" value="' . esc_attr($value) . '" ' . checked($value, $option, false) . '> ' . esc_html($label) . '</label><br>';
 		}
@@ -308,6 +308,8 @@ class Anz_Pins_Admin
 							<tr>
 								<th>Country</th>
 								<th>Postcode</th>
+								<th>Latitude</th>
+								<th>Longitude</th>
 							</tr>
 						</thead>
 						<tbody id="country-postcodes">
@@ -319,115 +321,117 @@ class Anz_Pins_Admin
 					</p>
 				</form>
 			</div>
-		</div>
-		<style>
-			#edit-modal {
-				position: fixed;
-				top: 50%;
-				left: 50%;
-				transform: translate(-50%, -50%);
-				background: #fff;
-				padding: 20px;
-				box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-				z-index: 1000;
-			}
+			<div id="map-preview" style="display:none;">
+				<div id="anz-pins-map" style="width: 100%; height: 600px;"></div>
+			</div>
+			<style>
+				#edit-modal {
+					position: fixed;
+					top: 50%;
+					left: 50%;
+					transform: translate(-50%, -50%);
+					background: #fff;
+					padding: 20px;
+					box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+					z-index: 1000;
+				}
 
-			.modal-content {
-				display: flex;
-				flex-direction: column;
-			}
+				.modal-content {
+					display: flex;
+					flex-direction: column;
+				}
 
-			.shortcode-field {
-				margin-right: 5px;
-			}
-		</style>
-		<script>
-			jQuery(document).ready(function($) {
-				// Show the modal for adding a new item
-				$('#add-new-item').on('click', function() {
-					$('#item_id').val('');
-					$('#item_name').val('');
-					$('#edit-modal').show();
-				});
+				.shortcode-field {
+					margin-right: 5px;
+				}
+			</style>
+			<script>
+				jQuery(document).ready(function($) {
+					// Show the modal for adding a new item
+					$('#add-new-item').on('click', function() {
+						$('#item_id').val('');
+						$('#item_name').val('');
+						$('#edit-modal').show();
+					});
 
-				// Show the modal for editing an existing item
-				$('.edit-item').on('click', function() {
-					var itemId = $(this).data('id');
-					var itemName = $(this).closest('tr').find('td:nth-child(2)').text();
+					// Show the modal for editing an existing item
+					$('.edit-item').on('click', function() {
+						var itemId = $(this).data('id');
+						var itemName = $(this).closest('tr').find('td:nth-child(2)').text();
 
-					$('#item_id').val(itemId);
-					$('#item_name').val(itemName);
-					// populate the country_postcodes
-					if ($(this).closest('tr').find('input.country_postcodes').val() !== '') {
-						var country_postcodes = JSON.parse($(this).closest('tr').find('input.country_postcodes').val());
-						var country_postcodes_html = '';
-						if (country_postcodes.length > 0) {
-							country_postcodes.forEach(function(country_postcode) {
-								country_postcodes_html += '<tr><td>' + country_postcode.country + '</td><td>' + country_postcode.postcode + '</td></tr>';
-							});
-						}
+						$('#item_id').val(itemId);
+						$('#item_name').val(itemName);
 						// populate the country_postcodes
-						$('#country-postcodes').html(country_postcodes_html);
-					} else {
-						$('#country-postcodes').html('');
-					}
-					$('#edit-modal').show();
-				});
-
-				// Handle the form submission
-				$('#edit-item-form').on('submit', function(e) {
-					e.preventDefault();
-
-					var formData = new FormData(this);
-
-					// AJAX request to save the item
-					$.ajax({
-						url: ajaxurl,
-						type: 'POST',
-						data: formData,
-						processData: false,
-						contentType: false,
-						success: function(response) {
-							location.reload(); // Reload the page to show the updated list
+						if ($(this).closest('tr').find('input.country_postcodes').val() !== '') {
+							var country_postcodes = JSON.parse($(this).closest('tr').find('input.country_postcodes').val());
+							var country_postcodes_html = '';
+							if (country_postcodes.length > 0) {
+								country_postcodes.forEach(function(country_postcode) {
+									country_postcodes_html += '<tr><td>' + country_postcode.countrycode + '</td><td>' + country_postcode.postcode + '</td><td>' + country_postcode.latitude + '</td><td>' + country_postcode.longitude + '</td></tr>';
+								});
+							}
+							// populate the country_postcodes
+							$('#country-postcodes').html(country_postcodes_html);
+						} else {
+							$('#country-postcodes').html('');
 						}
+						$('#edit-modal').show();
+					});
+
+					// Handle the form submission
+					$('#edit-item-form').on('submit', function(e) {
+						e.preventDefault();
+
+						var formData = new FormData(this);
+
+						// AJAX request to save the item
+						$.ajax({
+							url: ajaxurl,
+							type: 'POST',
+							data: formData,
+							processData: false,
+							contentType: false,
+							success: function(response) {
+								location.reload(); // Reload the page to show the updated list
+							}
+						});
+					});
+
+					// Handle the delete button click
+					$('.delete-item').on('click', function() {
+						if (!confirm('Are you sure you want to delete this item?')) {
+							return;
+						}
+
+						var itemId = $(this).data('id');
+
+						// AJAX request to delete the item
+						$.post(ajaxurl, {
+							action: 'delete_anz_pins_map',
+							item_id: itemId,
+						}, function(response) {
+							location.reload(); // Reload the page to show the updated list
+						});
+					});
+
+					// Handle the copy button click
+					$('.copy-shortcode').on('click', function() {
+						var shortcode = $(this).data('shortcode');
+						var $temp = $('<input>');
+						$('body').append($temp);
+						$temp.val(shortcode).select();
+						document.execCommand('copy');
+						$temp.remove();
+						alert('Shortcode copied to clipboard: ' + shortcode);
+					});
+
+					// Close the modal
+					$('#close-modal').on('click', function() {
+						$('#edit-modal').hide();
 					});
 				});
-
-				// Handle the delete button click
-				$('.delete-item').on('click', function() {
-					if (!confirm('Are you sure you want to delete this item?')) {
-						return;
-					}
-
-					var itemId = $(this).data('id');
-
-					// AJAX request to delete the item
-					$.post(ajaxurl, {
-						action: 'delete_anz_pins_map',
-						item_id: itemId,
-					}, function(response) {
-						location.reload(); // Reload the page to show the updated list
-					});
-				});
-
-				// Handle the copy button click
-				$('.copy-shortcode').on('click', function() {
-					var shortcode = $(this).data('shortcode');
-					var $temp = $('<input>');
-					$('body').append($temp);
-					$temp.val(shortcode).select();
-					document.execCommand('copy');
-					$temp.remove();
-					alert('Shortcode copied to clipboard: ' + shortcode);
-				});
-
-				// Close the modal
-				$('#close-modal').on('click', function() {
-					$('#edit-modal').hide();
-				});
-			});
-		</script>
-<?php
+			</script>
+	<?php
 	}
 
 	public function save_anz_pins_map()
@@ -466,9 +470,17 @@ class Anz_Pins_Admin
 					}
 					$country = sanitize_text_field($row[0]);
 					$postcode = sanitize_text_field($row[1]);
-					$country_postcodes[] = array('country' => $country, 'postcode' => $postcode);
+					$latitude = sanitize_text_field($row[2]);
+					$longitude = sanitize_text_field($row[3]);
+					$country_postcodes[] = array('countrycode' => $country, 'postcode' => $postcode, 'latitude' => $latitude, 'longitude' => $longitude);
 				}
-				$items[$item_id]['country_postcodes'] = $country_postcodes;
+				// reformat the no coordinate postcodes
+				$requesting_postcodes = array_map(function ($country_postcode) {
+					return array('countrycode' => $country_postcode['countrycode'], 'postcode' => $country_postcode['postcode']);
+				}, $country_postcodes);
+				// contruct a post request with country_postcodes as the body
+				$with_coordinates = $this->request_coordinate($requesting_postcodes);
+				$items[$item_id]['country_postcodes'] = json_decode($with_coordinates);
 			} else {
 				wp_die(SimpleXLSX::parseError());
 			}
@@ -502,5 +514,37 @@ class Anz_Pins_Admin
 		update_option('anz_pins_maps', $items);
 
 		wp_die(); // This is required to terminate immediately and return a proper response
+	}
+
+	public function request_coordinate($postcodes)
+	{
+		// Prepare the data
+		$body = $postcodes;
+		$token = get_option('anz_pins_willai_token_option');
+
+		// Set up the arguments
+		$args = array(
+			'body'        => json_encode($body),
+			'timeout'     => '45',
+			'redirection' => '5',
+			'httpversion' => '2.0',
+			'blocking'    => true,
+			'headers'     => array(
+				'Authorization' => "Bearer $token",
+				'Content-Type'  => 'application/json',
+			),
+			'cookies'     => array(),
+		);
+
+		// Make the POST request
+		$response = wp_remote_post('http://localhost:3000/getgeos', $args);
+
+		// Handle the response
+		if (is_wp_error($response)) {
+			$error_message = $response->get_error_message();
+			echo "Something went wrong: $error_message";
+		} else {
+			return wp_remote_retrieve_body($response);
+		}
 	}
 }

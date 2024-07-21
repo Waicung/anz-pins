@@ -19,57 +19,9 @@
 </div>
 
 <?php
-// populate a list of coordinate from various australia districts
-$au_pins = array(
-    array('lat' => -33.8688, 'lng' => 151.2093),
-    array('lat' => -37.8136, 'lng' => 144.9631),
-    array('lat' => -31.9505, 'lng' => 115.8605),
-    array('lat' => -34.9285, 'lng' => 138.6007),
-    array('lat' => -27.4698, 'lng' => 153.0251),
-    array('lat' => -35.2809, 'lng' => 149.1300),
-    array('lat' => -12.4634, 'lng' => 130.8456),
-    array('lat' => -19.2576, 'lng' => 146.8179),
-    array('lat' => -34.9285, 'lng' => 138.6007),
-    array('lat' => -37.8136, 'lng' => 144.9631),
-    array('lat' => -33.8688, 'lng' => 151.2093),
-    array('lat' => -31.9505, 'lng' => 115.8605),
-    array('lat' => -27.4698, 'lng' => 153.0251),
-    array('lat' => -35.2809, 'lng' => 149.1300),
-    array('lat' => -12.4634, 'lng' => 130.8456),
-    array('lat' => -19.2576, 'lng' => 146.8179),
-    array('lat' => -34.9285, 'lng' => 138.6007),
-    array('lat' => -37.8136, 'lng' => 144.9631),
-    array('lat' => -33.8688, 'lng' => 151.2093),
-    array('lat' => -31.9505, 'lng' => 115.8605),
-    array('lat' => -27.4698, 'lng' => 153.0251),
-    array('lat' => -35.2809, 'lng' => 149.1300)
-);
-
-// populate a list of coordinate from various new zealand districts
-$nz_pins = array(
-    array('lat' => -36.8485, 'lng' => 174.7633),
-    array('lat' => -41.2865, 'lng' => 174.7762),
-    array('lat' => -43.5321, 'lng' => 172.6362),
-    array('lat' => -45.8742, 'lng' => 170.5036),
-    array('lat' => -36.8485, 'lng' => 174.7633),
-    array('lat' => -41.2865, 'lng' => 174.7762),
-    array('lat' => -43.5321, 'lng' => 172.6362),
-    array('lat' => -45.8742, 'lng' => 170.5036),
-    array('lat' => -36.8485, 'lng' => 174.7633),
-    array('lat' => -41.2865, 'lng' => 174.7762),
-    array('lat' => -43.5321, 'lng' => 172.6362),
-    array('lat' => -45.8742, 'lng' => 170.5036),
-    array('lat' => -36.8485, 'lng' => 174.7633),
-    array('lat' => -41.2865, 'lng' => 174.7762),
-    array('lat' => -43.5321, 'lng' => 172.6362),
-    array('lat' => -45.8742, 'lng' => 170.5036),
-    array('lat' => -36.8485, 'lng' => 174.7633),
-    array('lat' => -41.2865, 'lng' => 174.7762),
-    array('lat' => -43.5321, 'lng' => 172.6362),
-    array('lat' => -45.8742, 'lng' => 170.5036)
-);
-
-
+$map_id = $atts['map'];
+// get the pins for the map
+$pins = Anz_Pins::get_pins_by_map($map_id);
 ?>
 
 <script>
@@ -80,8 +32,8 @@ $nz_pins = array(
             attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        var auPins = <?php echo json_encode($au_pins); ?>;
-        var nzPins = <?php echo json_encode($nz_pins); ?>;
+
+        var pins = <?php echo json_encode($pins); ?>;
 
         // Define a custom icon
         var customIcon = L.icon({
@@ -90,18 +42,12 @@ $nz_pins = array(
             iconSize: [32, 32], // Size of the icon
         });
 
-        auPins.forEach(function(pin) {
+        pins.forEach(function(pin) {
             // Apply the custom icon to each marker
-            L.marker([pin.lat, pin.lng], {
+            L.marker([pin.latitude, pin.longitude], {
                 icon: customIcon
             }).addTo(map);
         });
 
-        nzPins.forEach(function(pin) {
-            // Apply the custom icon to each marker
-            L.marker([pin.lat, pin.lng], {
-                icon: customIcon
-            }).addTo(map);
-        });
     });
 </script>
