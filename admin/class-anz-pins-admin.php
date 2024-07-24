@@ -512,7 +512,12 @@ class Anz_Pins_Admin
 		// Get the posted data
 		$item_id = sanitize_text_field($_POST['item_id']);
 		$item_name = sanitize_text_field($_POST['item_name']);
-		$custom_icon = sanitize_url($_POST['pin_icon']);
+		if (empty($_POST['pin_icon'])) {
+			$custom_icon = Anz_Pins::get_default_icon_url();
+		} else {
+			$custom_icon = sanitize_url($_POST['pin_icon']);
+		}
+
 
 		// Get the existing items
 		$items = get_option('anz_pins_maps', array());
@@ -544,13 +549,13 @@ class Anz_Pins_Admin
 					$longitude = sanitize_text_field($row[3]);
 					$country_postcodes[] = array('countrycode' => $country, 'postcode' => $postcode, 'latitude' => $latitude, 'longitude' => $longitude);
 				}
-				// reformat the no coordinate postcodes
+				// reformat to request coordinate
 				$requesting_postcodes = array_map(function ($country_postcode) {
 					return array('countrycode' => $country_postcode['countrycode'], 'postcode' => $country_postcode['postcode']);
 				}, $country_postcodes);
 				// contruct a post request with country_postcodes as the body
 				$with_coordinates = $this->request_coordinate($requesting_postcodes);
-				$items[$item_id]['country_postcodes'] = json_decode($with_coordinates);
+				$items[$item_id]['country_postcodes'] = $with_coordinates;
 			} else {
 				wp_die(SimpleXLSX::parseError());
 			}
@@ -588,35 +593,70 @@ class Anz_Pins_Admin
 		wp_die(); // This is required to terminate immediately and return a proper response
 	}
 
-	public function request_coordinate($postcodes)
+	public function request_coordinate($cpostcodes)
 	{
-		// Prepare the data
-		$body = $postcodes;
-		$token = get_option('anz_pins_willai_token_option');
+		// get existing coordinate from options
+		$existing_coordinates = get_option('anz_pins_coordinates', array());
+		// get the postcodes that are not in the existing coordinates
+		$notlocated_postcodes = array_filter($cpostcodes, function ($cpostcode) use ($existing_coordinates) {
+			return !array_key_exists($cpostcode['countrycode'] . $cpostcode['postcode'], $existing_coordinates);
+		});
 
-		// Set up the arguments
-		$args = array(
-			'body'        => json_encode($body),
-			'timeout'     => '45',
-			'redirection' => '5',
-			'httpversion' => '2.0',
-			'blocking'    => true,
-			'headers'     => array(
-				'Authorization' => "Bearer $token",
-				'Content-Type'  => 'application/json',
-			),
-			'cookies'     => array(),
-		);
+		if (count($notlocated_postcodes) > 0) {
 
-		// Make the POST request
-		$response = wp_remote_post('http://localhost:3000/getgeos', $args);
 
-		// Handle the response
-		if (is_wp_error($response)) {
-			$error_message = $response->get_error_message();
-			echo "Something went wrong: $error_message";
+			// Prepare the data
+			$token = get_option('anz_pins_willai_token_option');
+
+			// Set up the arguments
+			$args = array(
+				'body'        => json_encode($notlocated_postcodes),
+				'timeout'     => '45',
+				'redirection' => '5',
+				'httpversion' => '2.0',
+				'blocking'    => true,
+				'headers'     => array(
+					'Authorization' => "Bearer $token",
+					'Content-Type'  => 'application/json',
+				),
+				'cookies'     => array(),
+			);
+
+			// Make the POST request
+			$response = wp_remote_post('https://vercelapi.willai.com.au/getgeos', $args);
+
+			// Handle the response
+			if (is_wp_error($response)) {
+				$error_message = $response->get_error_message();
+				echo "Something went wrong: $error_message";
+			} else {
+				$response = wp_remote_retrieve_body($response);
+			}
+
+			// combine the existing coordinates with the new coordinates
+			$coordinates = array_merge($existing_coordinates, $this->coordinate_formater(json_decode($response, true)));
+			// save the new coordinates
+			update_option('anz_pins_coordinates', $coordinates);
+			// get coordinates for postcodes
+			$with_coordinates = array_map(function ($cpostcode) use ($coordinates) {
+				$coordinate = $coordinates[$cpostcode['countrycode'] . $cpostcode['postcode']];
+				return array('countrycode' => $cpostcode['countrycode'], 'postcode' => $cpostcode['postcode'], 'latitude' => $coordinate['latitude'], 'longitude' => $coordinate['longitude']);
+			}, $cpostcodes);
 		} else {
-			return wp_remote_retrieve_body($response);
+			$with_coordinates = array_map(function ($cpostcode) use ($existing_coordinates) {
+				$coordinate = $existing_coordinates[$cpostcode['countrycode'] . $cpostcode['postcode']];
+				return array('countrycode' => $cpostcode['countrycode'], 'postcode' => $cpostcode['postcode'], 'latitude' => $coordinate['latitude'], 'longitude' => $coordinate['longitude']);
+			}, $cpostcodes);
 		}
+		return $with_coordinates;
+	}
+
+	public function coordinate_formater($coordinates)
+	{
+		$formated_coordinates = array();
+		foreach ($coordinates as $coordinate) {
+			$formated_coordinates[$coordinate['countrycode'] . $coordinate['postcode']] = array('latitude' => $coordinate['latitude'], 'longitude' => $coordinate['longitude']);
+		}
+		return $formated_coordinates;
 	}
 }
