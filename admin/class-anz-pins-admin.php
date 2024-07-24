@@ -241,7 +241,7 @@ class Anz_Pins_Admin
 				<button id="add-new-item" class="button" type="button">Add New Map</button>
 			</p>
 
-			<table class="wp-list-table widefat fixed striped centered">
+			<table class="wp-list-table widefat fixed striped centered responsive-table">
 				<thead>
 					<tr>
 						<th>ID</th>
@@ -357,6 +357,50 @@ class Anz_Pins_Admin
 
 				.shortcode-field {
 					margin-right: 5px;
+				}
+
+				/* Make the table itself scrollable horizontally */
+				@media screen and (max-width: 768px) {
+					table.responsive-table {
+						width: 100%;
+						overflow-x: auto;
+						display: block;
+					}
+
+					table.responsive-table thead {
+						display: none;
+					}
+
+					table.responsive-table,
+					table.responsive-table tbody,
+					table.responsive-table th,
+					table.responsive-table td,
+					table.responsive-table tr {
+						display: block;
+					}
+
+					table.responsive-table tr {
+						margin-bottom: 10px;
+					}
+
+					table.responsive-table td {
+						text-align: center;
+						position: relative;
+
+						white-space: nowrap;
+					}
+
+					table.responsive-table td:before {
+						/* Now using attr() to dynamically insert the content based on the data-label attribute */
+						content: attr(data-label);
+						position: absolute;
+						left: 0;
+						width: 50%;
+						padding-right: 10px;
+						white-space: nowrap;
+						text-align: left;
+						font-weight: bold;
+					}
 				}
 			</style>
 			<script>
