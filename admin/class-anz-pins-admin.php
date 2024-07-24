@@ -478,7 +478,7 @@ class Anz_Pins_Admin
 							var country_postcodes = JSON.parse($(this).closest('tr').find('input.country_postcodes').val());
 							var country_postcodes_html = '';
 							if (country_postcodes.length > 0) {
-								country_postcodes.forEach(function(country_postcode) {
+								country_postcodes.slice(0, 10).forEach(function(country_postcode) {
 									country_postcodes_html += '<tr><td>' + country_postcode.countrycode + '</td><td>' + country_postcode.postcode + '</td><td>' + country_postcode.latitude + '</td><td>' + country_postcode.longitude + '</td></tr>';
 								});
 							}
@@ -654,7 +654,7 @@ class Anz_Pins_Admin
 
 			// Set up the arguments
 			$args = array(
-				'body'        => json_encode($notlocated_postcodes),
+				'body'        => json_encode(array_values($notlocated_postcodes)),
 				'timeout'     => '45',
 				'redirection' => '5',
 				'httpversion' => '2.0',
