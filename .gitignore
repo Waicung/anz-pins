@@ -38,3 +38,5 @@ package-lock.json
 # Ignore miscellaneous files
 .DS_Store
 Thumbs.db
+
+*.zip

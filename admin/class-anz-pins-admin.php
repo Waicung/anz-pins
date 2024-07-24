@@ -154,11 +154,11 @@ class Anz_Pins_Admin
 
 	public function settings_init()
 	{
-		register_setting('anz_pins_options_group', 'anz_pins_souce_option');
-		register_setting('anz_pins_options_group', 'anz_pins_google_key_option');
+		//register_setting('anz_pins_options_group', 'anz_pins_souce_option');
+		//register_setting('anz_pins_options_group', 'anz_pins_google_key_option');
 		register_setting('anz_pins_options_group', 'anz_pins_willai_token_option');
 
-		add_settings_section(
+		/* add_settings_section(
 			'base_map_settings_section',
 			'Base Map',
 			array($this, 'base_map_settings_section_callback'),
@@ -171,7 +171,7 @@ class Anz_Pins_Admin
 			array($this, 'source_setting_field_callback'),
 			'anz-pins-settings',
 			'base_map_settings_section'
-		);
+		); */
 
 		/* add_settings_field(
 			'google_key_setting_field',
